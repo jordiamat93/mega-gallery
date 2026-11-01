@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mega Gallery</title>
+<style>
+:root{--bg:#101827;--panel:#202c3e;--panel2:#1a2433;--gold:#ffc629;--text:#f8fafc;--muted:#aab6c7;--line:#354258}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#1c1d2a;box-shadow:0 3px 14px #0005}
+.nav{max-width:1000px;min-height:82px;margin:auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:9px;color:var(--gold);font-size:clamp(23px,5vw,34px);font-weight:800;letter-spacing:-1px;text-decoration:none}
+.mark{width:38px;height:38px;border-radius:50%;background:var(--gold);color:#24202a;display:grid;place-items:center}
+.iconbtn{background:none;border:0;color:white;font-size:26px;padding:8px;cursor:pointer}
+.menu{display:none;max-width:1000px;margin:auto;padding:0 22px 16px;gap:18px;flex-wrap:wrap}.menu.open{display:flex}.menu a{color:#eee;text-decoration:none}
+.wrap{max-width:720px;margin:auto;padding:18px 16px 35px}
+.search{width:100%;padding:14px 16px;border-radius:13px;border:1px solid var(--line);background:var(--panel);color:white;font-size:16px;outline:none;margin-bottom:8px}
+.search:focus,input:focus,textarea:focus{border-color:var(--gold)}
+.card{overflow:hidden;margin:18px 0 26px;background:var(--panel);border-radius:17px;box-shadow:0 10px 25px #0003}
+.photo{width:100%;aspect-ratio:4/4.1;max-height:520px;object-fit:cover;display:block;background:linear-gradient(135deg,#475569,#1e293b 60%,#71445d)}
+.placeholder{aspect-ratio:4/3;display:grid;place-items:center;text-align:center;padding:24px;background:radial-gradient(circle at 70% 20%,#f8c96b66,transparent 28%),linear-gradient(135deg,#475569,#1e293b 60%,#713f5c);font-size:38px;font-weight:800}
+.details{padding:17px 19px 21px}.date{color:var(--muted);font-size:14px;margin-bottom:9px}h2{font-size:21px;margin:0 0 9px}.desc{color:#cbd5e1;line-height:1.5;margin:0 0 14px;white-space:pre-wrap}
+.tag{display:inline-block;background:var(--gold);color:#20202a;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:800}
+.join{background:var(--panel2);border:1px solid var(--line);border-radius:17px;padding:20px;text-align:center;margin:26px 0}
+.join h3{color:var(--gold);margin:0 0 13px}.links{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}.links a{color:var(--gold);border:1px solid #78632c;border-radius:10px;padding:10px 13px;text-decoration:none}
+footer{text-align:center;color:#8793a5;font-size:13px;padding:8px 12px 30px}
+.empty{text-align:center;color:var(--muted);padding:35px 8px;display:none}
+.admin-trigger{display:block;margin:12px auto 0;background:none;border:1px solid #46536a;color:#9eabc0;border-radius:9px;padding:8px 12px;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:#000b;z-index:20;overflow:auto;padding:18px}.overlay.show{display:block}
+.admin{max-width:620px;margin:25px auto;background:#1d293a;border:1px solid #46536a;border-radius:18px;padding:20px}
+.adminhead{display:flex;justify-content:space-between;align-items:center;gap:12px}.admin h2{margin:0;color:var(--gold)}
+.close{border:0;background:none;color:white;font-size:26px;cursor:pointer}
+label{display:block;color:#dbe3ef;font-size:14px;margin:14px 0 6px}
+input,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#111b2a;color:white;font:inherit}
+textarea{min-height:85px;resize:vertical}
+.btn{border:0;border-radius:10px;background:var(--gold);color:#1b2230;font-weight:800;padding:12px 16px;cursor:pointer}
+.btn.secondary{background:#344258;color:#f8fafc}.btn.danger{background:#8f3340;color:white}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.note{font-size:12px;color:#aab6c7;line-height:1.5;margin-top:10px}
+.postrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.postrow strong{display:block}.postrow small{color:var(--muted)}
+#loginBox{max-width:350px;margin:50px auto;text-align:center}
+#adminContent{display:none}
+@media(min-width:700px){.photo{aspect-ratio:16/9;max-height:420px}.placeholder{aspect-ratio:16/9}}
+</style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <button class="iconbtn" id="menuBtn" aria-label="Menu">☰</button>
+    <a class="brand" href="#"><span class="mark">M</span>Mega Gallery</a>
+    <button class="iconbtn" id="searchBtn" aria-label="Cari">⌕</button>
+  </div>
+  <nav class="menu" id="menu"><a href="#">Beranda</a><a href="#posts">Galeri</a><a href="#community">Komunitas</a><a href="#contact">Kontak</a></nav>
+</header>
+
+<main class="wrap">
+  <input class="search" id="search" type="search" placeholder="Cari judul atau deskripsi konten...">
+  <section id="posts"></section>
+  <p class="empty" id="empty">Konten tidak ditemukan. Coba kata kunci lain.</p>
+  <section class="join" id="community">
+    <h3>📢 Gabung Komunitas</h3>
+    <div class="links">
+      <a id="discordLink" href="#" target="_blank" rel="noopener">Discord</a>
+      <a id="telegramLink" href="#" target="_blank" rel="noopener">Telegram Gratis</a>
+      <a id="vipLink" href="#" target="_blank" rel="noopener">Telegram VIP</a>
+    </div>
+  </section>
+  <footer id="contact">© <span id="year"></span> Mega Gallery</footer>
+  <button class="admin-trigger" id="openAdmin">⚙ Admin Panel</button>
+</main>
+
+<div class="overlay" id="overlay">
+ <div class="admin">
+  <div class="adminhead"><h2>Admin Panel</h2><button class="close" id="closeAdmin">×</button></div>
+  <div id="loginBox">
+   <p>Masukkan PIN admin untuk mengelola website.</p>
+   <label for="pin">PIN Admin</label><input id="pin" type="password" inputmode="numeric" placeholder="PIN">
+   <div class="actions"><button class="btn" id="loginBtn">Masuk</button></div>
+   <p class="note">PIN awal: <b>1234</b>. Ganti PIN di bagian pengaturan setelah masuk.</p>
+   <p id="loginError" class="note"></p>
+  </div>
+  <div id="adminContent">
+   <h3>Tambah konten baru</h3>
+   <label for="title">Judul konten *</label><input id="title" placeholder="Contoh: Koleksi terbaru">
+   <label for="date">Tanggal posting</label><input id="date" type="date">
+   <label for="description">Deskripsi</label><textarea id="description" placeholder="Tulis keterangan konten..."></textarea>
+   <label for="imageFile">Pilih foto dari HP / komputer</label><input id="imageFile" type="file" accept="image/*">
+   <p class="note">Foto disimpan di browser perangkat ini. Gunakan gambar yang Anda punya hak untuk publikasikan.</p>
+   <div class="actions"><button class="btn" id="addPost">＋ Tambahkan postingan</button></div>
+   <hr style="border-color:#354258;margin:22px 0">
+   <h3>Daftar postingan</h3><div id="postList"></div>
+   <hr style="border-color:#354258;margin:22px 0">
+   <h3>Pengaturan website</h3>
+   <label for="siteName">Nama website</label><input id="siteName" value="Mega Gallery">
+   <label for="discord">Link Discord</label><input id="discord" placeholder="https://discord.gg/...">
+   <label for="telegram">Link Telegram Gratis</label><input id="telegram" placeholder="https://t.me/...">
+   <label for="vip">Link Telegram VIP</label><input id="vip" placeholder="https://t.me/...">
+   <label for="newPin">Ganti PIN admin (opsional)</label><input id="newPin" type="password" placeholder="PIN baru">
+   <div class="actions"><button class="btn" id="saveSettings">Simpan pengaturan</button><button class="btn secondary" id="exportData">Backup data</button><button class="btn secondary" id="logout">Keluar admin</button></div>
+   <p class="note">Catatan: ini versi satu file tanpa server. Postingan hanya tersimpan di browser/perangkat ini. PIN sederhana bukan sistem keamanan untuk website publik. Untuk dipakai banyak pengunjung dan dikelola dari beberapa perangkat, perlu hosting + backend/database.</p>
+  </div>
+ </div>
+</div>
+
+<script>
+const KEY='mega_gallery_posts_v1', SETTINGS='mega_gallery_settings_v1', PINKEY='mega_gallery_pin_v1';
+const $=id=>document.getElementById(id);
+const starter=[
+ {id:'sample1',title:'Selamat Datang di Mega Gallery',date:new Date().toISOString().slice(0,10),description:'Ini adalah contoh postingan. Buka Admin Panel untuk mengganti atau menambahkan konten milik Anda.',image:'',tag:'SELAMAT DATANG'}
+];
+let posts=JSON.parse(localStorage.getItem(KEY)||'null')||starter;
+let settings=JSON.parse(localStorage.getItem(SETTINGS)||'{}');
+function savePosts(){localStorage.setItem(KEY,JSON.stringify(posts))}
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function niceDate(d){if(!d)return '';const x=new Date(d+'T00:00:00');return isNaN(x)?d:x.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}
+function render(){
+ const q=$('search').value.toLowerCase().trim();
+ const filtered=posts.filter(p=>(p.title+' '+p.description).toLowerCase().includes(q));
+ $('posts').innerHTML=filtered.map(p=>`<article class="card"><div class="media">${p.image?`<img class="photo" src="${p.image}" alt="${safe(p.title)}">`:`<div class="placeholder">Mega Gallery</div>`}</div><div class="details"><div class="date">📅 ${safe(niceDate(p.date))}</div><h2>${safe(p.title)}</h2><p class="desc">${safe(p.description)}</p>${p.tag?`<span class="tag">${safe(p.tag)}</span>`:''}</div></article>`).join('');
+ $('empty').style.display=filtered.length?'none':'block';
+ $('year').textContent=new Date().getFullYear();
+}
+function renderSettings(){
+ $('discordLink').href=settings.discord||'#';$('telegramLink').href=settings.telegram||'#';$('vipLink').href=settings.vip||'#';
+ if(settings.name){document.querySelector('.brand').lastChild.textContent=settings.name;document.title=settings.name}
+}
+function renderAdminList(){
+ $('postList').innerHTML=posts.map(p=>`<div class="postrow"><div><strong>${safe(p.title)}</strong><small>${safe(niceDate(p.date))}</small></div><button class="btn danger" data-delete="${safe(p.id)}">Hapus</button></div>`).join('')||'<p class="note">Belum ada postingan.</p>';
+ $('postList').querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{if(confirm('Hapus postingan ini?')){posts=posts.filter(p=>p.id!==b.dataset.delete);savePosts();render();renderAdminList()}}));
+}
+$('menuBtn').onclick=()=>$('menu').classList.toggle('open');
+$('searchBtn').onclick=()=>{$('search').focus();window.scrollTo({top:0,behavior:'smooth'})};
+$('search').addEventListener('input',render);
+$('openAdmin').onclick=()=>{$('overlay').classList.add('show');$('loginBox').style.display='block';$('adminContent').style.display='none';$('pin').value='';$('loginError').textContent=''};
+$('closeAdmin').onclick=()=>$('overlay').classList.remove('show');
+$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))$('overlay').classList.remove('show')});
+$('loginBtn').onclick=()=>{if($('pin').value===(localStorage.getItem(PINKEY)||'1234')){$('loginBox').style.display='none';$('adminContent').style.display='block';renderAdminList();$('siteName').value=settings.name||'Mega Gallery';$('discord').value=settings.discord||'';$('telegram').value=settings.telegram||'';$('vip').value=settings.vip||''}else $('loginError').textContent='PIN salah. Coba lagi.'};
+$('pin').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
+$('addPost').onclick=()=>{
+ const title=$('title').value.trim(),file=$('imageFile').files[0];
+ if(!title){alert('Judul konten wajib diisi.');return}
+ const add=imageData=>{
+  posts.unshift({id:Date.now().toString(),title,date:$('date').value||new Date().toISOString().slice(0,10),description:$('description').value.trim(),image:imageData||'',tag:'KONTEN TERBARU'});
+  try{savePosts()}catch(e){alert('Penyimpanan penuh. Coba gunakan foto yang lebih kecil.');return}
+  $('title').value='';$('description').value='';$('imageFile').value='';$('date').value='';
+  render();renderAdminList();alert('Postingan berhasil ditambahkan di browser ini.');
+ };
+ if(file){if(!file.type.startsWith('image/')){alert('Pilih file gambar.');return}const reader=new FileReader();reader.onload=()=>add(reader.result);reader.readAsDataURL(file)}else add('');
+};
+$('saveSettings').onclick=()=>{
+ settings={name:$('siteName').value.trim()||'Mega Gallery',discord:$('discord').value.trim(),telegram:$('telegram').value.trim(),vip:$('vip').value.trim()};
+ localStorage.setItem(SETTINGS,JSON.stringify(settings));
+ if($('newPin').value.trim()){localStorage.setItem(PINKEY,$('newPin').value.trim());$('newPin').value=''}
+ renderSettings();alert('Pengaturan tersimpan.');
+};
+$('exportData').onclick=()=>{
+ const blob=new Blob([JSON.stringify({posts,settings},null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mega-gallery-backup.json';a.click();URL.revokeObjectURL(a.href);
+};
+$('logout').onclick=()=>{$('adminContent').style.display='none';$('loginBox').style.display='block';$('pin').value=''};
+renderSettings();render();
+</script>
+</body>
+</html>
