@@ -21,6 +21,7 @@ header{position:sticky;top:0;z-index:5;background:#1c1d2a;box-shadow:0 3px 14px 
 .placeholder{aspect-ratio:4/3;display:grid;place-items:center;text-align:center;padding:24px;background:radial-gradient(circle at 70% 20%,#f8c96b66,transparent 28%),linear-gradient(135deg,#475569,#1e293b 60%,#713f5c);font-size:38px;font-weight:800}
 .details{padding:17px 19px 21px}.date{color:var(--muted);font-size:14px;margin-bottom:9px}h2{font-size:21px;margin:0 0 9px}.desc{color:#cbd5e1;line-height:1.5;margin:0 0 14px;white-space:pre-wrap}
 .tag{display:inline-block;background:var(--gold);color:#20202a;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:800}
+.open-link{display:inline-block;margin-top:14px;padding:11px 17px;border-radius:10px;background:var(--gold);color:#20202a;font-weight:800;text-decoration:none}.open-link:hover{filter:brightness(1.08)}
 .join{background:var(--panel2);border:1px solid var(--line);border-radius:17px;padding:20px;text-align:center;margin:26px 0}
 .join h3{color:var(--gold);margin:0 0 13px}.links{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}.links a{color:var(--gold);border:1px solid #78632c;border-radius:10px;padding:10px 13px;text-decoration:none}
 footer{text-align:center;color:#8793a5;font-size:13px;padding:8px 12px 30px}
@@ -85,6 +86,8 @@ textarea{min-height:85px;resize:vertical}
    <label for="title">Judul konten *</label><input id="title" placeholder="Contoh: Koleksi terbaru">
    <label for="date">Tanggal posting</label><input id="date" type="date">
    <label for="description">Deskripsi</label><textarea id="description" placeholder="Tulis keterangan konten..."></textarea>
+   <label for="contentUrl">Link konten (URL)</label><input id="contentUrl" type="url" placeholder="https://contoh.com/konten">
+   <p class="note">Tombol BUKA KONTEN akan muncul untuk pengunjung jika link diisi.</p>
    <label for="imageFile">Pilih foto dari HP / komputer</label><input id="imageFile" type="file" accept="image/*">
    <p class="note">Foto disimpan di browser perangkat ini. Gunakan gambar yang Anda punya hak untuk publikasikan.</p>
    <div class="actions"><button class="btn" id="addPost">＋ Tambahkan postingan</button></div>
@@ -114,10 +117,11 @@ let settings=JSON.parse(localStorage.getItem(SETTINGS)||'{}');
 function savePosts(){localStorage.setItem(KEY,JSON.stringify(posts))}
 function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function niceDate(d){if(!d)return '';const x=new Date(d+'T00:00:00');return isNaN(x)?d:x.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}
+function safeUrl(value){try{const u=new URL(String(value||''));return ['http:','https:'].includes(u.protocol)?u.href:''}catch{return ''}}
 function render(){
  const q=$('search').value.toLowerCase().trim();
  const filtered=posts.filter(p=>(p.title+' '+p.description).toLowerCase().includes(q));
- $('posts').innerHTML=filtered.map(p=>`<article class="card"><div class="media">${p.image?`<img class="photo" src="${p.image}" alt="${safe(p.title)}">`:`<div class="placeholder">Mega Gallery</div>`}</div><div class="details"><div class="date">📅 ${safe(niceDate(p.date))}</div><h2>${safe(p.title)}</h2><p class="desc">${safe(p.description)}</p>${p.tag?`<span class="tag">${safe(p.tag)}</span>`:''}</div></article>`).join('');
+ $('posts').innerHTML=filtered.map(p=>`<article class="card"><div class="media">${p.image?`<img class="photo" src="${p.image}" alt="${safe(p.title)}">`:`<div class="placeholder">Mega Gallery</div>`}</div><div class="details"><div class="date">📅 ${safe(niceDate(p.date))}</div><h2>${safe(p.title)}</h2><p class="desc">${safe(p.description)}</p>${p.tag?`<span class="tag">${safe(p.tag)}</span>`:''}${safeUrl(p.url)?`<a class="open-link" href="${safe(safeUrl(p.url))}" target="_blank" rel="noopener noreferrer">BUKA KONTEN ↗</a>`:''}</div></article>`).join('');
  $('empty').style.display=filtered.length?'none':'block';
  $('year').textContent=new Date().getFullYear();
 }
@@ -141,9 +145,9 @@ $('addPost').onclick=()=>{
  const title=$('title').value.trim(),file=$('imageFile').files[0];
  if(!title){alert('Judul konten wajib diisi.');return}
  const add=imageData=>{
-  posts.unshift({id:Date.now().toString(),title,date:$('date').value||new Date().toISOString().slice(0,10),description:$('description').value.trim(),image:imageData||'',tag:'KONTEN TERBARU'});
+  posts.unshift({id:Date.now().toString(),title,date:$('date').value||new Date().toISOString().slice(0,10),description:$('description').value.trim(),url:$('contentUrl').value.trim(),image:imageData||'',tag:'KONTEN TERBARU'});
   try{savePosts()}catch(e){alert('Penyimpanan penuh. Coba gunakan foto yang lebih kecil.');return}
-  $('title').value='';$('description').value='';$('imageFile').value='';$('date').value='';
+  $('title').value='';$('description').value='';$('contentUrl').value='';$('imageFile').value='';$('date').value='';
   render();renderAdminList();alert('Postingan berhasil ditambahkan di browser ini.');
  };
  if(file){if(!file.type.startsWith('image/')){alert('Pilih file gambar.');return}const reader=new FileReader();reader.onload=()=>add(reader.result);reader.readAsDataURL(file)}else add('');
